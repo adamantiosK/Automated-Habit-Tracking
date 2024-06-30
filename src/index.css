@@ -172,3 +172,9 @@ body {
     transform: translate(-50%, -50%) scale(1.2);
   }
 } */
+
+.copy-item-label,
+.delete-item-label {
+  cursor: pointer;
+  margin-left: 12px; /* Adjust the value as needed for spacing */
+}

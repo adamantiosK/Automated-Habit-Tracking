@@ -45,18 +45,14 @@ function App() {
     handleClose();
   };
 
-  const handleCopy = async (cardId) => {
-    const habitToCopy = habits.find(habit => habit.id === cardId);
-    if (habitToCopy) {
-      try {
-        await navigator.clipboard.writeText(habitToCopy.title);
-        toast.success('Habit name copied to clipboard!');
-      } catch (error) {
-        toast.error('Failed to copy habit name.');
-        console.error('Failed to copy habit name:', error);
-      }
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard!');
+    } catch (error) {
+      toast.error('Failed to copy.');
+      console.error('Failed to copy:', error);
     }
-    handleClose();
   };
 
   const handleClickOutside = (event) => {
@@ -126,11 +122,11 @@ function App() {
       prevHabits.map((habit) =>
         habit.id === cardId
           ? {
-              ...habit,
-              items: habit.items.map((item) =>
-                item.id === itemId ? { ...item, content: newItemContent } : item
-              ),
-            }
+            ...habit,
+            items: habit.items.map((item) =>
+              item.id === itemId ? { ...item, content: newItemContent } : item
+            ),
+          }
           : habit
       )
     );
@@ -140,9 +136,9 @@ function App() {
     const updatedHabits = habits.map((habit) =>
       habit.id === cardId
         ? {
-            ...habit,
-            items: habit.items.filter((item) => item.id !== itemId),
-          }
+          ...habit,
+          items: habit.items.filter((item) => item.id !== itemId),
+        }
         : habit
     );
 
@@ -155,7 +151,7 @@ function App() {
   };
 
   const handleAddItem = async (cardId) => {
-    const newItem = { 
+    const newItem = {
       id: helperService.getNewUUID(),
       content: '{ new item }'
     };
@@ -163,9 +159,9 @@ function App() {
     const updatedHabits = habits.map((habit) =>
       habit.id === cardId
         ? {
-            ...habit,
-            items: [...habit.items, newItem],
-          }
+          ...habit,
+          items: [...habit.items, newItem],
+        }
         : habit
     );
 
@@ -249,15 +245,26 @@ function App() {
                         className="edit-item"
                         onClick={(e) => e.stopPropagation()} // Prevent click from propagating
                       />
-                      <button
-                        className="delete-item-button"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent click from propagating
-                          handleDeleteItem(habit.id, item.id);
-                        }}
-                      >
-                        &times;
-                      </button>
+<label
+  className="copy-item-label"
+  onClick={(e) => {
+    e.stopPropagation(); // Prevent click from propagating
+    handleCopy(item.content);
+  }}
+>
+  <FontAwesomeIcon icon={faCopy} />
+</label>
+
+<label
+  className="delete-item-label"
+  onClick={(e) => {
+    e.stopPropagation(); // Prevent click from propagating
+    handleDeleteItem(habit.id, item.id);
+  }}
+>
+  <FontAwesomeIcon icon={faTrashAlt} />
+</label>
+
                     </div>
                   ))}
                 </div>
@@ -299,7 +306,7 @@ function App() {
           onMouseLeave={handleClose}
         >
           {habits.find(habit => habit.id === contextMenu.cardId).items.length === 0 && (
-            <li onClick={() => handleCopy(contextMenu.cardId)}>
+            <li onClick={() => handleCopy(habits.find(habit => habit.id === contextMenu.cardId).title)}>
               <FontAwesomeIcon icon={faCopy} /> Copy
             </li>
           )}
