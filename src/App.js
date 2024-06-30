@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { atomicHabitsApiService } from './data-access/atomicHabitsApiService';
 import HelperService from './Helper/HelperService';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 
 function App() {
   const [contextMenu, setContextMenu] = useState(null);
@@ -279,8 +281,12 @@ function App() {
           }}
           onMouseLeave={handleClose}
         >
-          <li onClick={() => handleAction('edit')}>Edit</li>
-          <li onClick={() => handleAction('delete')}>Delete</li>
+          <li onClick={() => handleAction('edit')}>
+            <FontAwesomeIcon icon={faEdit} /> Edit
+          </li>
+          <li onClick={() => handleAction('delete')}>
+            <FontAwesomeIcon icon={faTrashAlt} /> Delete
+          </li>
         </ul>
       ) : null}
     </div>
