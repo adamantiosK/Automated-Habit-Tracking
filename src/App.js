@@ -3,7 +3,9 @@ import './App.css';
 import { atomicHabitsApiService } from './data-access/atomicHabitsApiService';
 import HelperService from './Helper/HelperService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrashAlt, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [contextMenu, setContextMenu] = useState(null);
@@ -39,6 +41,20 @@ function App() {
     }
     if (action === 'delete') {
       await handleDeleteCard(contextMenu.cardId);
+    }
+    handleClose();
+  };
+
+  const handleCopy = async (cardId) => {
+    const habitToCopy = habits.find(habit => habit.id === cardId);
+    if (habitToCopy) {
+      try {
+        await navigator.clipboard.writeText(habitToCopy.title);
+        toast.success('Habit name copied to clipboard!');
+      } catch (error) {
+        toast.error('Failed to copy habit name.');
+        console.error('Failed to copy habit name:', error);
+      }
     }
     handleClose();
   };
@@ -200,6 +216,7 @@ function App() {
 
   return (
     <div className="App" onContextMenu={(e) => e.preventDefault()}>
+      <ToastContainer />
       <nav className="navbar">
         <div className="title">Habit Tracker</div>
         <div className="login">Login</div>
@@ -281,6 +298,11 @@ function App() {
           }}
           onMouseLeave={handleClose}
         >
+          {habits.find(habit => habit.id === contextMenu.cardId).items.length === 0 && (
+            <li onClick={() => handleCopy(contextMenu.cardId)}>
+              <FontAwesomeIcon icon={faCopy} /> Copy
+            </li>
+          )}
           <li onClick={() => handleAction('edit')}>
             <FontAwesomeIcon icon={faEdit} /> Edit
           </li>
