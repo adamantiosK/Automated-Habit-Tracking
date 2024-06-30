@@ -122,11 +122,11 @@ function App() {
       prevHabits.map((habit) =>
         habit.id === cardId
           ? {
-            ...habit,
-            items: habit.items.map((item) =>
-              item.id === itemId ? { ...item, content: newItemContent } : item
-            ),
-          }
+              ...habit,
+              items: habit.items.map((item) =>
+                item.id === itemId ? { ...item, content: newItemContent } : item
+              ),
+            }
           : habit
       )
     );
@@ -136,9 +136,9 @@ function App() {
     const updatedHabits = habits.map((habit) =>
       habit.id === cardId
         ? {
-          ...habit,
-          items: habit.items.filter((item) => item.id !== itemId),
-        }
+            ...habit,
+            items: habit.items.filter((item) => item.id !== itemId),
+          }
         : habit
     );
 
@@ -151,7 +151,7 @@ function App() {
   };
 
   const handleAddItem = async (cardId) => {
-    const newItem = {
+    const newItem = { 
       id: helperService.getNewUUID(),
       content: '{ new item }'
     };
@@ -159,9 +159,9 @@ function App() {
     const updatedHabits = habits.map((habit) =>
       habit.id === cardId
         ? {
-          ...habit,
-          items: [...habit.items, newItem],
-        }
+            ...habit,
+            items: [...habit.items, newItem],
+          }
         : habit
     );
 
@@ -210,6 +210,12 @@ function App() {
     }
   };
 
+  const getCardColorClass = (completed) => {
+    if (completed === true) return 'completed-true';
+    if (completed === false) return 'completed-false';
+    return '';
+  };
+
   return (
     <div className="App" onContextMenu={(e) => e.preventDefault()}>
       <ToastContainer />
@@ -221,7 +227,7 @@ function App() {
         {habits.map((habit) => (
           <div
             key={habit.id}
-            className={`card habit-card ${editMode === habit.id ? 'edit-mode' : ''} ${editAnimation && editMode === habit.id ? 'animate' : ''}`}
+            className={`card habit-card ${getCardColorClass(habit.completed)} ${editMode === habit.id ? 'edit-mode' : ''} ${editAnimation && editMode === habit.id ? 'animate' : ''}`}
             onContextMenu={(e) => handleContextMenu(e, habit.id)}
             onClick={(e) => handleCardClick(e, habit.id)}
             ref={editMode === habit.id ? editCardRef : null}
@@ -245,26 +251,24 @@ function App() {
                         className="edit-item"
                         onClick={(e) => e.stopPropagation()} // Prevent click from propagating
                       />
-<label
-  className="copy-item-label"
-  onClick={(e) => {
-    e.stopPropagation(); // Prevent click from propagating
-    handleCopy(item.content);
-  }}
->
-  <FontAwesomeIcon icon={faCopy} />
-</label>
-
-<label
-  className="delete-item-label"
-  onClick={(e) => {
-    e.stopPropagation(); // Prevent click from propagating
-    handleDeleteItem(habit.id, item.id);
-  }}
->
-  <FontAwesomeIcon icon={faTrashAlt} />
-</label>
-
+                      <label
+                        className="copy-item-label"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent click from propagating
+                          handleCopy(item.content);
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faCopy} />
+                      </label>
+                      <label
+                        className="delete-item-label"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent click from propagating
+                          handleDeleteItem(habit.id, item.id);
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faTrashAlt} />
+                      </label>
                     </div>
                   ))}
                 </div>

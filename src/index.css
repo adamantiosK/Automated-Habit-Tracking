@@ -37,7 +37,7 @@ body {
 
 .card {
   background-color: #1e1e1e;
-  border: 2px dashed #555;
+  border: 2px solid #555; /* Default border color */
   border-radius: 10px;
   width: 150px;
   height: 150px;
@@ -46,8 +46,16 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.3s;
+  transition: border-color 0.3s, transform 0.3s;
   margin: 0.5rem;
+}
+
+.completed-true {
+  border-color: green !important;
+}
+
+.completed-false {
+  border-color: red !important;
 }
 
 .card:hover {
@@ -60,7 +68,7 @@ body {
 }
 
 .habit-card {
-  border: 2px solid #555;
+  border: 2px solid #555; /* Default border color */
 }
 
 .card-title {
@@ -124,13 +132,10 @@ body {
   width: 100%;
 }
 
-.delete-item-button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.2rem;
+.copy-item-label,
+.delete-item-label {
   cursor: pointer;
-  margin-left: 0.5rem;
+  margin-left: 12px; /* Adjust the value as needed for spacing */
 }
 
 .add-item-button {
@@ -163,7 +168,7 @@ body {
 .animate {
   animation: moveToCenter 0.3s forwards;
 }
-/* 
+
 @keyframes moveToCenter {
   0% {
     transform: translate(0, 0) scale(1);
@@ -171,10 +176,4 @@ body {
   100% {
     transform: translate(-50%, -50%) scale(1.2);
   }
-} */
-
-.copy-item-label,
-.delete-item-label {
-  cursor: pointer;
-  margin-left: 12px; /* Adjust the value as needed for spacing */
 }
