@@ -1,28 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import { atomicHabitsApiService } from './data-access/atomicHabitsApiService';
+import HelperService from './Helper/HelperService';
 
 function App() {
   const [contextMenu, setContextMenu] = useState(null);
-  const [habits, setHabits] = useState([
-    {
-      id: 1,
-      title: 'My Habit',
-      items: ['Item 1', 'Item 2', 'Item 3'],
-    },
-    {
-      id: 2,
-      title: 'Another Habit',
-      items: ['Item A', 'Item B', 'Item C'],
-    },
-    {
-      id: 3,
-      title: 'New Habit',
-      items: ['Task 1', 'Task 2'],
-    },
-  ]);
+  const [habits, setHabits] = useState([]);
   const [editMode, setEditMode] = useState(null);
   const [editAnimation, setEditAnimation] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
   const editCardRef = useRef(null);
+  const helperService = new HelperService();
 
   const handleContextMenu = (event, cardId) => {
     event.preventDefault();
@@ -39,13 +27,16 @@ function App() {
     setContextMenu(null);
   };
 
-  const handleAction = (action) => {
+  const handleAction = async (action) => {
     if (action === 'edit') {
       setEditAnimation(true);
       setTimeout(() => {
         setEditMode(contextMenu.cardId);
         setEditAnimation(false);
       }, 300);
+    }
+    if (action === 'delete') {
+      await handleDeleteCard(contextMenu.cardId);
     }
     handleClose();
   };
@@ -57,11 +48,14 @@ function App() {
         setEditMode(null);
         setEditAnimation(false);
       }, 300);
+      // Set pending update to trigger useEffect
+      setPendingUpdate(editMode);
     }
   };
 
-  const handleCardClick = (event) => {
+  const handleCardClick = (event, cardId) => {
     event.stopPropagation();
+    setEditMode(cardId);
   };
 
   useEffect(() => {
@@ -75,6 +69,30 @@ function App() {
     };
   }, [editMode]);
 
+  useEffect(() => {
+    fetchHabits();
+  }, []);
+
+  useEffect(() => {
+    if (pendingUpdate) {
+      const habitToUpdate = habits.find(habit => habit.id === pendingUpdate);
+      if (habitToUpdate) {
+        atomicHabitsApiService.updateHabit(habitToUpdate)
+          .then(() => {
+            setPendingUpdate(null);
+          })
+          .catch(error => {
+            console.error('Error updating habit:', error);
+          });
+      }
+    }
+  }, [pendingUpdate, habits]);
+
+  const fetchHabits = async () => {
+    const loadedHabits = await atomicHabitsApiService.getAllHabits();
+    setHabits(loadedHabits);
+  };
+
   const handleTitleChange = (event, cardId) => {
     const newTitle = event.target.value;
     setHabits((prevHabits) =>
@@ -84,15 +102,15 @@ function App() {
     );
   };
 
-  const handleItemChange = (event, cardId, index) => {
-    const newItem = event.target.value;
+  const handleItemChange = (event, cardId, itemId) => {
+    const newItemContent = event.target.value;
     setHabits((prevHabits) =>
       prevHabits.map((habit) =>
         habit.id === cardId
           ? {
               ...habit,
-              items: habit.items.map((item, i) =>
-                i === index ? newItem : item
+              items: habit.items.map((item) =>
+                item.id === itemId ? { ...item, content: newItemContent } : item
               ),
             }
           : habit
@@ -100,44 +118,82 @@ function App() {
     );
   };
 
-  const handleDeleteItem = (cardId, index) => {
-    setHabits((prevHabits) =>
-      prevHabits.map((habit) =>
-        habit.id === cardId
-          ? {
-              ...habit,
-              items: habit.items.filter((_, i) => i !== index),
-            }
-          : habit
-      )
+  const handleDeleteItem = async (cardId, itemId) => {
+    const updatedHabits = habits.map((habit) =>
+      habit.id === cardId
+        ? {
+            ...habit,
+            items: habit.items.filter((item) => item.id !== itemId),
+          }
+        : habit
     );
+
+    try {
+      await atomicHabitsApiService.deleteHabitItems(itemId);
+      setHabits(updatedHabits);
+    } catch (error) {
+      console.error('Error updating habit items:', error);
+    }
   };
 
-  const handleAddItem = (cardId) => {
-    setHabits((prevHabits) =>
-      prevHabits.map((habit) =>
-        habit.id === cardId
-          ? {
-              ...habit,
-              items: [...habit.items, ''],
-            }
-          : habit
-      )
-    );
-  };
-
-  const handleAddCard = () => {
-    const newCard = {
-      id: habits.length + 1,
-      title: '',
-      items: [],
+  const handleAddItem = async (cardId) => {
+    const newItem = { 
+      id: helperService.getNewUUID(),
+      content: '{ new item }'
     };
-    setHabits((prevHabits) => [...prevHabits, newCard]);
-    setEditAnimation(true);
-    setTimeout(() => {
-      setEditMode(newCard.id);
-      setEditAnimation(false);
-    }, 300);
+
+    const updatedHabits = habits.map((habit) =>
+      habit.id === cardId
+        ? {
+            ...habit,
+            items: [...habit.items, newItem],
+          }
+        : habit
+    );
+
+    try {
+      await atomicHabitsApiService.addNewItemToCard(cardId, newItem);
+      setHabits(updatedHabits);
+    } catch (error) {
+      console.error('Error updating habit items:', error);
+    }
+  };
+
+  const handleAddCard = async () => {
+    const newUUID = helperService.getNewUUID();
+
+    const newCard = {
+      id: newUUID,
+      title: '{New Habit}',
+      items: []
+    };
+
+    try {
+      await atomicHabitsApiService.addNewCard(newCard);
+
+      setHabits((prevHabits) => [...prevHabits, newCard]);
+      setEditAnimation(true);
+      setTimeout(() => {
+        setEditMode(newCard.id);
+        setEditAnimation(false);
+      }, 0);
+    } catch (error) {
+      console.error('Error adding new card:', error);
+    }
+  };
+
+  const handleDeleteCard = async (cardId) => {
+    try {
+      const { error } = await atomicHabitsApiService.deleteCard(cardId);
+
+      if (error) {
+        console.error('Error deleting card:', error);
+      } else {
+        setHabits((prevHabits) => prevHabits.filter((habit) => habit.id !== cardId));
+      }
+    } catch (error) {
+      console.error('Error deleting card:', error);
+    }
   };
 
   return (
@@ -152,7 +208,7 @@ function App() {
             key={habit.id}
             className={`card habit-card ${editMode === habit.id ? 'edit-mode' : ''} ${editAnimation && editMode === habit.id ? 'animate' : ''}`}
             onContextMenu={(e) => handleContextMenu(e, habit.id)}
-            onClick={handleCardClick}
+            onClick={(e) => handleCardClick(e, habit.id)}
             ref={editMode === habit.id ? editCardRef : null}
           >
             {editMode === habit.id ? (
@@ -162,21 +218,24 @@ function App() {
                   value={habit.title}
                   onChange={(e) => handleTitleChange(e, habit.id)}
                   className="edit-title"
-                  onClick={handleCardClick}
+                  onClick={(e) => e.stopPropagation()} // Prevent click from propagating
                 />
                 <div className="card-items">
-                  {habit.items.map((item, index) => (
-                    <div key={index} className="edit-item-container">
+                  {habit.items.map((item) => (
+                    <div key={item.id} className="edit-item-container">
                       <input
                         type="text"
-                        value={item}
-                        onChange={(e) => handleItemChange(e, habit.id, index)}
+                        value={item.content}
+                        onChange={(e) => handleItemChange(e, habit.id, item.id)}
                         className="edit-item"
-                        onClick={handleCardClick}
+                        onClick={(e) => e.stopPropagation()} // Prevent click from propagating
                       />
                       <button
                         className="delete-item-button"
-                        onClick={() => handleDeleteItem(habit.id, index)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent click from propagating
+                          handleDeleteItem(habit.id, item.id);
+                        }}
                       >
                         &times;
                       </button>
@@ -185,7 +244,10 @@ function App() {
                 </div>
                 <button
                   className="add-item-button"
-                  onClick={() => handleAddItem(habit.id)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent click from propagating
+                    handleAddItem(habit.id);
+                  }}
                 >
                   Add Item
                 </button>
@@ -194,9 +256,9 @@ function App() {
               <>
                 <div className="card-title">{habit.title}</div>
                 <div className="card-items">
-                  {habit.items.map((item, index) => (
-                    <div key={index} className="card-item">
-                      {item}
+                  {habit.items.map((item) => (
+                    <div key={item.id} className="card-item">
+                      {item.content}
                     </div>
                   ))}
                 </div>
@@ -217,7 +279,6 @@ function App() {
           }}
           onMouseLeave={handleClose}
         >
-          <li onClick={() => handleAction('copy')}>Copy Endpoint</li>
           <li onClick={() => handleAction('edit')}>Edit</li>
           <li onClick={() => handleAction('delete')}>Delete</li>
         </ul>
