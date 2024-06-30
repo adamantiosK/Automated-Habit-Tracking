@@ -3,7 +3,7 @@ import './App.css';
 import { atomicHabitsApiService } from './data-access/atomicHabitsApiService';
 import HelperService from './Helper/HelperService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrashAlt, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrashAlt, faCopy, faCheckCircle, faTimesCircle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -48,7 +48,7 @@ function App() {
   const handleCopy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Copied to clipboard!');
+    toast.success('Copied to clipboard!');
     } catch (error) {
       toast.error('Failed to copy.');
       console.error('Failed to copy:', error);
@@ -216,6 +216,18 @@ function App() {
     return '';
   };
 
+  const getItemIcon = (completed) => {
+    if (completed === true) return faCheckCircle;
+    if (completed === false) return faTimesCircle;
+    return faQuestionCircle; // For null/undefined
+  };
+
+  const getItemIconClass = (completed) => {
+    if (completed === true) return 'item-icon completed-true';
+    if (completed === false) return 'item-icon completed-false';
+    return 'item-icon completed-null';
+  };
+
   return (
     <div className="App" onContextMenu={(e) => e.preventDefault()}>
       <ToastContainer />
@@ -244,6 +256,10 @@ function App() {
                 <div className="card-items">
                   {habit.items.map((item) => (
                     <div key={item.id} className="edit-item-container">
+                      <FontAwesomeIcon
+                        icon={getItemIcon(item.completed)}
+                        className={getItemIconClass(item.completed)}
+                      />
                       <input
                         type="text"
                         value={item.content}
@@ -288,6 +304,10 @@ function App() {
                 <div className="card-items">
                   {habit.items.map((item) => (
                     <div key={item.id} className="card-item">
+                      <FontAwesomeIcon
+                        icon={getItemIcon(item.completed)}
+                        className={getItemIconClass(item.completed)}
+                      />
                       {item.content}
                     </div>
                   ))}

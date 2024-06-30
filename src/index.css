@@ -84,7 +84,25 @@ body {
 }
 
 .card-item {
+  display: flex;
+  align-items: center;
   margin: 0.2rem 0;
+}
+
+.item-icon {
+  margin-right: 8px; /* Adjust the value as needed for spacing */
+}
+
+.item-icon.completed-true {
+  color: green;
+}
+
+.item-icon.completed-false {
+  color: red;
+}
+
+.item-icon.completed-null {
+  color: orange;
 }
 
 .habit-card .card-title {
