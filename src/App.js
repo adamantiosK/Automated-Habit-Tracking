@@ -48,7 +48,7 @@ function App() {
   const handleCopy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
+    toast.success('Copied Habit Completion URL to clipboard!');
     } catch (error) {
       toast.error('Failed to copy.');
       console.error('Failed to copy:', error);
@@ -271,7 +271,7 @@ function App() {
                         className="copy-item-label"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent click from propagating
-                          handleCopy(item.content);
+                          handleCopy(item.successUrl);
                         }}
                       >
                         <FontAwesomeIcon icon={faCopy} />
@@ -330,7 +330,7 @@ function App() {
           onMouseLeave={handleClose}
         >
           {habits.find(habit => habit.id === contextMenu.cardId).items.length === 0 && (
-            <li onClick={() => handleCopy(habits.find(habit => habit.id === contextMenu.cardId).title)}>
+            <li onClick={() => handleCopy(habits.find(habit => habit.id === contextMenu.cardId).successUrl)}>
               <FontAwesomeIcon icon={faCopy} /> Copy
             </li>
           )}
